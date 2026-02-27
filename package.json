@@ -1,0 +1,24 @@
+{
+  "name": "flowpay-wdk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@tetherto/wdk": "^1.0.0-beta.5",
+    "@tetherto/wdk-protocol-bridge-usdt0-evm": "^1.0.0-beta.2",
+    "@tetherto/wdk-protocol-lending-aave-evm": "^1.0.0-beta.3",
+    "@tetherto/wdk-secret-manager": "^1.0.0-beta.3",
+    "@tetherto/wdk-wallet-evm": "^1.0.0-beta.8",
+    "@tetherto/wdk-wallet-evm-erc-4337": "^1.0.0-beta.5",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "viem": "^2.46.3"
+  }
+}

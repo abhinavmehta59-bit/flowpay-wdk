@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowPay — Agent Wallet</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e2e8f0;min-height:100vh}
+
+    header{display:flex;align-items:center;gap:12px;padding:20px 32px;border-bottom:1px solid #1e1e2e}
+    .logo{font-size:22px;font-weight:700;color:#7c3aed;letter-spacing:-.5px}
+    .logo span{color:#e2e8f0}
+    .badge{font-size:11px;background:#1e1e2e;color:#7c3aed;padding:3px 8px;border-radius:99px;border:1px solid #7c3aed40}
+    .net{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b}
+    .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+    main{max-width:960px;margin:0 auto;padding:32px 24px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}}
+
+    h2{font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+
+    .card{background:#111118;border:1px solid #1e1e2e;border-radius:16px;padding:24px;margin-bottom:20px}
+    .card-sm{background:#111118;border:1px solid #1e1e2e;border-radius:16px;padding:24px}
+
+    .btn{padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:600;transition:all .15s}
+    .btn-primary{background:#7c3aed;color:#fff}
+    .btn-primary:hover{background:#6d28d9}
+    .btn-secondary{background:#1e1e2e;color:#e2e8f0;border:1px solid #2e2e3e}
+    .btn-secondary:hover{background:#2a2a3a}
+    .btn-sm{padding:8px 14px;font-size:13px}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .btns{display:flex;gap:10px;flex-wrap:wrap}
+
+    input,textarea{width:100%;background:#0a0a0f;border:1px solid #2e2e3e;border-radius:10px;padding:11px 14px;color:#e2e8f0;font-size:13px;font-family:inherit;margin-bottom:12px}
+    input:focus,textarea:focus{outline:none;border-color:#7c3aed}
+    label{font-size:12px;color:#64748b;margin-bottom:6px;display:block}
+
+    .addr-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #1e1e2e}
+    .addr-row:last-child{border-bottom:none;padding-bottom:0}
+    .addr-row:first-child{padding-top:0}
+    .chain{display:flex;align-items:center;gap:10px}
+    .chain-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px}
+    .chain-name{font-size:13px;font-weight:600}
+    .chain-sub{font-size:11px;color:#64748b;margin-top:1px}
+    .mono{font-family:'SF Mono',monospace;font-size:11px;color:#94a3b8;background:#0a0a0f;padding:5px 9px;border-radius:6px;cursor:pointer;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:all .15s}
+    .mono:hover{color:#7c3aed}
+
+    .tag{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:600;margin-left:6px}
+    .tag-erc{background:#7c3aed20;color:#a78bfa;border:1px solid #7c3aed40}
+    .tag-x402{background:#05966920;color:#34d399;border:1px solid #05966940}
+
+    .bal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+    .bal{background:#0a0a0f;border:1px solid #1e1e2e;border-radius:12px;padding:16px}
+    .bal-amt{font-size:26px;font-weight:700;margin:4px 0}
+    .bal-sym{font-size:12px;color:#64748b}
+    .bal-lbl{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .bal.usdt{border-color:#2563eb30}.bal.usdt .bal-amt{color:#60a5fa}
+    .bal.eth{border-color:#7c3aed30}.bal.eth .bal-amt{color:#a78bfa}
+    .bal.yield{border-color:#05966930}.bal.yield .bal-amt{color:#34d399}
+
+    .hint{background:#1a1a2e;border:1px solid #7c3aed25;border-radius:10px;padding:12px 16px;font-size:12px;color:#94a3b8;margin-top:14px}
+    .hint a{color:#7c3aed;text-decoration:none}
+
+    .seed-box{background:#0a0a0f;border:1px solid #2e2e3e;border-radius:10px;padding:14px;font-family:'SF Mono',monospace;font-size:12px;color:#7c3aed;word-break:break-all;margin-top:12px}
+    .warn{font-size:11px;color:#f59e0b;margin-top:8px}
+
+    .tx-result{background:#0d1f0d;border:1px solid #22c55e30;border-radius:10px;padding:14px;margin-top:14px;display:none}
+    .tx-result.show{display:block}
+    .tx-result a{color:#22c55e;font-size:12px;font-family:monospace;word-break:break-all}
+    .tx-error{background:#1f0d0d;border:1px solid #ef444430;border-radius:10px;padding:14px;margin-top:14px;display:none;font-size:13px;color:#f87171}
+    .tx-error.show{display:block}
+
+    .spinner{display:inline-block;width:13px;height:13px;border:2px solid #ffffff30;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e1e2e;color:#e2e8f0;padding:10px 20px;border-radius:10px;font-size:13px;border:1px solid #2e2e3e;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
+    .toast.show{opacity:1}
+
+    .hidden{display:none}
+    .refresh{font-size:11px;color:#64748b;background:none;border:none;cursor:pointer;margin-left:8px}
+    .refresh:hover{color:#7c3aed}
+    .divider{height:1px;background:#1e1e2e;margin:16px 0}
+
+    .rule-list{list-style:none;margin-top:8px}
+    .rule-list li{font-size:12px;color:#94a3b8;padding:4px 0;display:flex;align-items:center;gap:8px}
+    .rule-list li::before{content:'✓';color:#22c55e;font-weight:700}
+
+    .step{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+    .step-num{width:24px;height:24px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
+    .step-text{font-size:13px;color:#94a3b8}
+    .step-text strong{color:#e2e8f0}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Flow<span>Pay</span></div>
+  <div class="badge">WDK Demo · Arbitrum</div>
+  <div class="net"><div class="dot"></div>Testnet</div>
+</header>
+
+<main>
+
+  <!-- ── SETUP ─────────────────────────────────────────────── -->
+  <div class="card" id="setup-card">
+    <h2>Agent Wallet Setup</h2>
+    <div class="btns" style="margin-bottom:16px">
+      <button class="btn btn-primary" onclick="createWallet(this)">🪄 Create New Agent Wallet</button>
+      <button class="btn btn-secondary" onclick="toggleLoad()">📥 Load Existing</button>
+    </div>
+    <div id="load-section" class="hidden">
+      <label>12-word seed phrase</label>
+      <textarea id="seed-input" rows="2" placeholder="word1 word2 word3 ... word12"></textarea>
+      <button class="btn btn-primary btn-sm" onclick="loadWallet(this)">Load Wallet</button>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD ──────────────────────────────────────────── -->
+  <div id="dashboard" class="hidden">
+
+    <!-- Addresses -->
+    <div class="card">
+      <h2>Agent Addresses</h2>
+      <div class="addr-row">
+        <div class="chain">
+          <div class="chain-icon" style="background:#1e1e2e">⬡</div>
+          <div><div class="chain-name">Ethereum</div><div class="chain-sub">EOA · mainnet-ready</div></div>
+        </div>
+        <div class="mono" id="a-eth" onclick="copy('a-eth')">—</div>
+      </div>
+      <div class="addr-row">
+        <div class="chain">
+          <div class="chain-icon" style="background:#1a1a2e">🔵</div>
+          <div>
+            <div class="chain-name">Arbitrum One <span class="tag tag-x402">X402</span></div>
+            <div class="chain-sub">Low fees · Aave yield</div>
+          </div>
+        </div>
+        <div class="mono" id="a-arb" onclick="copy('a-arb')">—</div>
+      </div>
+      <div class="addr-row">
+        <div class="chain">
+          <div class="chain-icon" style="background:#1e1a2e">🔮</div>
+          <div>
+            <div class="chain-name">Smart Wallet <span class="tag tag-erc">ERC-4337</span></div>
+            <div class="chain-sub">Gasless · Arbitrum · USDT₮</div>
+          </div>
+        </div>
+        <div class="mono" id="a-smart" onclick="copy('a-smart')">—</div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <!-- Balances -->
+      <div class="card-sm">
+        <h2>Balances <button class="refresh" onclick="refreshBalance()">↻ refresh</button></h2>
+        <div class="bal-grid">
+          <div class="bal usdt">
+            <div class="bal-lbl">USDT₮</div>
+            <div class="bal-amt" id="b-usdt">—</div>
+            <div class="bal-sym">Arbitrum · USDT₮</div>
+          </div>
+          <div class="bal eth">
+            <div class="bal-lbl">ETH</div>
+            <div class="bal-amt" id="b-eth">—</div>
+            <div class="bal-sym">Arbitrum · USDT₮</div>
+          </div>
+        </div>
+        <div class="hint" id="faucet-hint">
+          💧 Need test USDT₮? →
+          <a href="https://dashboard.pimlico.io/test-erc20-faucet" target="_blank">pimlico.io faucet (Sepolia dev only)</a>
+          <br/>Paste your smart wallet address · select Sepolia
+        </div>
+      </div>
+
+      <!-- Rule Engine -->
+      <div class="card-sm">
+        <h2>Rule Engine</h2>
+        <ul class="rule-list">
+          <li>Max 1,000 USDT₮ per transaction</li>
+          <li>Recipient must be valid address</li>
+          <li>Balance must cover amount</li>
+          <li>LLM parses intent only — never executes</li>
+          <li>All payments signed by WDK wallet</li>
+        </ul>
+        <div class="divider"></div>
+        <div style="font-size:12px;color:#64748b">
+          Rule engine enforces constraints. The AI agent (Jarvis via OpenClaw) receives the instruction and passes it through rules before WDK signs.
+        </div>
+      </div>
+    </div>
+
+    <!-- Send -->
+    <div class="card">
+      <h2>Send USDT₮ <span style="font-size:11px;color:#64748b;font-weight:400;text-transform:none;letter-spacing:0">· gasless via ERC-4337 · Sepolia</span></h2>
+      <div class="grid">
+        <div>
+          <label>Recipient address</label>
+          <input id="send-to" type="text" placeholder="0x..." />
+          <label>Amount (USDT₮)</label>
+          <input id="send-amount" type="number" placeholder="10" min="0.01" max="1000" />
+          <button class="btn btn-primary" onclick="sendUSDT₮(this)">⚡ Send Gaslessly</button>
+        </div>
+        <div>
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-text"><strong>Intent parsed</strong> — Jarvis reads instruction</div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-text"><strong>Rules checked</strong> — amount, recipient, balance</div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-text"><strong>WDK signs</strong> — ERC-4337 UserOperation submitted</div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-text"><strong>Settled on-chain</strong> — no ETH needed for gas</div>
+          </div>
+        </div>
+      </div>
+      <div class="tx-result" id="tx-result">
+        ✅ Transaction sent! <br/>
+        <a id="tx-link" href="#" target="_blank">View on Etherscan →</a>
+      </div>
+      <div class="tx-error" id="tx-error"></div>
+    </div>
+
+    <!-- Aave Yield -->
+    <div class="card">
+      <h2>Yield on Idle Funds <span style="font-size:11px;color:#64748b;font-weight:400;text-transform:none;letter-spacing:0">· Aave V3 · Arbitrum</span></h2>
+      <div class="grid">
+        <div class="bal yield">
+          <div class="bal-lbl">Aave USDT₮ Position</div>
+          <div class="bal-amt" id="b-aave">—</div>
+          <div class="bal-sym">~4-8% APY on Arbitrum</div>
+        </div>
+        <div style="font-size:13px;color:#94a3b8;line-height:1.6">
+          Idle USDT₮ between payments automatically earns yield via Aave V3. 
+          FlowPay deposits when funds are waiting, withdraws when a payment is triggered.
+          <br/><br/>
+          <button class="btn btn-secondary btn-sm" onclick="checkAave()">Check Aave Position</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seed -->
+    <div class="card">
+      <h2>🔑 Agent Seed Phrase</h2>
+      <div class="seed-box" id="seed-display">—</div>
+      <div class="warn">⚠️ Testnet only. Never use this pattern with real funds without proper encrypted key management.</div>
+    </div>
+
+  </div><!-- /dashboard -->
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let wallet = null
+
+function toast(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), 2000)
+}
+
+function copy(id) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent)
+  toast('Copied!')
+}
+
+function toggleLoad() {
+  document.getElementById('load-section').classList.toggle('hidden')
+}
+
+function setBtn(btn, loading, label) {
+  btn.disabled = loading
+  btn.innerHTML = loading ? `<span class="spinner"></span>${label}` : btn._orig
+}
+
+async function createWallet(btn) {
+  btn._orig = btn.innerHTML
+  setBtn(btn, true, 'Creating...')
+  try {
+    const r = await fetch('/api/wallet/create', { method: 'POST' })
+    const d = await r.json()
+    if (d.error) throw new Error(d.error)
+    renderWallet(d)
+  } catch(e) { toast('Error: ' + e.message) }
+  finally { setBtn(btn, false) }
+}
+
+async function loadWallet(btn) {
+  btn._orig = btn.innerHTML
+  setBtn(btn, true, 'Loading...')
+  try {
+    const seed = document.getElementById('seed-input').value.trim()
+    const r = await fetch('/api/wallet/load', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seed })
+    })
+    const d = await r.json()
+    if (d.error) throw new Error(d.error)
+    renderWallet(d)
+  } catch(e) { toast('Error: ' + e.message) }
+  finally { setBtn(btn, false) }
+}
+
+function renderWallet(data) {
+  wallet = data
+  document.getElementById('a-eth').textContent   = data.addresses.ethereum
+  document.getElementById('a-arb').textContent   = data.addresses.arbitrum
+  document.getElementById('a-smart').textContent = data.addresses.smartWallet
+  document.getElementById('seed-display').textContent = data.seed
+  document.getElementById('setup-card').classList.add('hidden')
+  document.getElementById('dashboard').classList.remove('hidden')
+  refreshBalance()
+}
+
+async function refreshBalance() {
+  if (!wallet) return
+  document.getElementById('b-usdt').textContent = '...'
+  document.getElementById('b-eth').textContent  = '...'
+  try {
+    const r = await fetch(`/api/balance/${wallet.addresses.smartWallet}`)
+    const d = await r.json()
+    document.getElementById('b-usdt').textContent = parseFloat(d.USDT₮).toFixed(2)
+    document.getElementById('b-eth').textContent  = parseFloat(d.ETH).toFixed(4)
+    if (parseFloat(d.USDT₮) > 0) {
+      document.getElementById('faucet-hint').style.display = 'none'
+    }
+  } catch(e) {
+    document.getElementById('b-usdt').textContent = 'err'
+    document.getElementById('b-eth').textContent  = 'err'
+  }
+}
+
+async function sendUSDT₮(btn) {
+  btn._orig = btn.innerHTML
+  setBtn(btn, true, 'Sending...')
+  document.getElementById('tx-result').classList.remove('show')
+  document.getElementById('tx-error').classList.remove('show')
+  try {
+    const to     = document.getElementById('send-to').value.trim()
+    const amount = document.getElementById('send-amount').value.trim()
+    const r = await fetch('/api/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, amount })
+    })
+    const d = await r.json()
+    if (d.error) throw new Error(d.error)
+    const el = document.getElementById('tx-result')
+    document.getElementById('tx-link').href        = d.explorerUrl
+    document.getElementById('tx-link').textContent = `${d.txHash.slice(0,20)}... → Etherscan`
+    el.classList.add('show')
+    refreshBalance()
+  } catch(e) {
+    const el = document.getElementById('tx-error')
+    el.textContent = '❌ ' + e.message
+    el.classList.add('show')
+  }
+  finally { setBtn(btn, false) }
+}
+
+async function checkAave() {
+  if (!wallet) return
+  document.getElementById('b-aave').textContent = '...'
+  try {
+    const r = await fetch(`/api/aave/position/${wallet.addresses.arbitrum}`)
+    const d = await r.json()
+    document.getElementById('b-aave').textContent = parseFloat(d.usdtBalance).toFixed(2) + ' USDT₮'
+  } catch(e) {
+    document.getElementById('b-aave').textContent = 'Error'
+  }
+}
+</script>
+</body>
+</html>
