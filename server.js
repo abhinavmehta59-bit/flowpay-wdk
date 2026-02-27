@@ -83,11 +83,25 @@ const sepoliaClient  = createPublicClient({ chain: sepolia,  transport: http(SEP
 const arbitrumClient = createPublicClient({ chain: arbitrum, transport: http(ARBITRUM_RPC) })
 const activeClient   = ACTIVE_NETWORK === 'arbitrum' ? arbitrumClient : sepoliaClient
 
-// ─── In-memory wallet state (demo only — use encrypted storage in prod) ───
+// ─── In-memory wallet state ────────────────────────────────────────────────
 
 let state = {
   seed: null,
   addresses: null
+}
+
+// Auto-load wallet from .env on startup
+async function autoLoadWallet() {
+  const seed = process.env.AGENT_SEED
+  if (!seed) return console.log('   No AGENT_SEED in .env — create wallet via UI')
+  try {
+    const result = await buildWallet(seed)
+    state = result
+    console.log(`   Agent wallet loaded: ${result.addresses.smartWallet}`)
+    console.log(`   Network: ${ACTIVE_NETWORK} | Token: USDT₮`)
+  } catch (e) {
+    console.error('   Auto-load failed:', e.message)
+  }
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -256,6 +270,61 @@ app.get('/api/aave/position/:address', async (req, res) => {
   }
 })
 
+// Parse natural language payment intent + execute
+// e.g. "Send 5 USDT to 0xABC...123 for invoice #42"
+app.post('/api/intent', async (req, res) => {
+  try {
+    if (!state.seed) return res.status(400).json({ error: 'No wallet loaded' })
+
+    const { message } = req.body
+    if (!message) return res.status(400).json({ error: 'Missing message' })
+
+    // Parse amount
+    const amountMatch = message.match(/(\d+(?:\.\d+)?)\s*(?:usdt|usd₮|usdt₮|\$)?/i)
+    // Parse Ethereum address
+    const addressMatch = message.match(/0x[a-fA-F0-9]{40}/)
+    // Parse memo (everything after "for")
+    const memoMatch = message.match(/for (.+)$/i)
+
+    if (!amountMatch) return res.status(400).json({ error: 'Could not parse amount. Try: "Send 5 USDT to 0x..."' })
+    if (!addressMatch) return res.status(400).json({ error: 'Could not find a valid 0x address' })
+
+    const amount = amountMatch[1]
+    const to     = addressMatch[0]
+    const memo   = memoMatch ? memoMatch[1] : 'no memo'
+
+    // Rule engine
+    const amountNum = parseFloat(amount)
+    if (amountNum <= 0)   return res.status(400).json({ error: 'Amount must be greater than 0' })
+    if (amountNum > 1000) return res.status(400).json({ error: `Rule engine blocked: max 1000 USDT per tx (requested ${amount})` })
+
+    // Check balance
+    const balRes  = await fetch(`http://localhost:${PORT}/api/balance/${state.addresses.smartWallet}`)
+    const balData = await balRes.json()
+    if (parseFloat(balData.USDT) < amountNum) {
+      return res.status(400).json({ error: `Insufficient balance: have ${balData.USDT} USDT, need ${amount}` })
+    }
+
+    // Execute
+    const sendRes  = await fetch(`http://localhost:${PORT}/api/send`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ to, amount })
+    })
+    const sendData = await sendRes.json()
+    if (sendData.error) throw new Error(sendData.error)
+
+    res.json({
+      parsed: { amount: `${amount} USDT₮`, to, memo },
+      rules:  { amountOk: true, addressValid: true, balanceSufficient: true },
+      result: sendData
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // Simple ABI encode for ERC-20 transfer (no external dep)
 function encodeFunctionData_transfer(to, amount) {
   // transfer(address,uint256) selector = 0xa9059cbb
@@ -268,7 +337,8 @@ function encodeFunctionData_transfer(to, amount) {
 // ─── Start ────────────────────────────────────────────────────────────────
 
 const PORT = 3456
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`\n🚀 FlowPay running → http://localhost:${PORT}`)
-  console.log('   Wallet: not loaded yet — create or load via UI\n')
+  await autoLoadWallet()
+  console.log('')
 })
