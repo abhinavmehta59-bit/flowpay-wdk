@@ -24,6 +24,61 @@ import { ExactEvmScheme } from '@x402/evm/exact/server'
 import { HTTPFacilitatorClient } from '@x402/core/server'
 
 const app = express()
+
+// SECURITY: Rate limiting
+const rateLimit = new Map()
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000 // 1 hour
+const RATE_LIMIT_MAX = 100 // 100 requests per hour
+
+function checkRateLimit(ip) {
+  const now = Date.now()
+  const windowStart = now - RATE_LIMIT_WINDOW
+  
+  if (!rateLimit.has(ip)) {
+    rateLimit.set(ip, [])
+  }
+  
+  const requests = rateLimit.get(ip).filter(time => time > windowStart)
+  requests.push(now)
+  rateLimit.set(ip, requests)
+  
+  return requests.length <= RATE_LIMIT_MAX
+}
+
+// SECURITY: Input validation
+function isValidAddress(address) {
+  return /^0x[a-fA-F0-9]{40}$/.test(address)
+}
+
+function isValidAmount(amount) {
+  const num = parseFloat(amount)
+  return !isNaN(num) && num > 0 && num <= 1000
+}
+
+// SECURITY: CORS restriction
+const ALLOWED_ORIGINS = [
+  'https://flowpay-wdk.onrender.com',
+  'http://localhost:3456',
+  'http://localhost:3000'
+]
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  
+  // Rate limiting
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  if (!checkRateLimit(clientIp)) {
+    return res.status(429).json({ error: 'Rate limit exceeded. Max 100 requests/hour.' })
+  }
+  
+  next()
+})
+
 app.use(express.json())
 app.use(express.static('public'))
 
@@ -274,11 +329,22 @@ app.post('/api/send', async (req, res) => {
     if (!state.seed) return res.status(400).json({ error: 'No wallet loaded' })
 
     const { to, amount } = req.body
+    
+    // SECURITY: Input validation
     if (!to || !amount) return res.status(400).json({ error: 'Missing to/amount' })
+    if (!isValidAddress(to)) return res.status(400).json({ error: 'Invalid recipient address' })
+    if (!isValidAmount(amount)) return res.status(400).json({ error: 'Invalid amount (must be 0-1000 USDT)' })
 
     const amountNum = parseFloat(amount)
-    if (amountNum <= 0)    return res.status(400).json({ error: 'Amount must be > 0' })
-    if (amountNum > 1000)  return res.status(400).json({ error: 'Rule engine: max 1000 USDT per tx' })
+    
+    // SECURITY: Large transaction confirmation required
+    if (amountNum > 10) {
+      return res.status(403).json({ 
+        error: 'Large transaction requires confirmation',
+        message: 'Transactions > 10 USDT require manual approval. Contact admin.',
+        maxAuto: 10
+      })
+    }
 
     const wdk4337 = new WDK(state.seed)
       .registerWallet(ACTIVE_NETWORK, WalletManagerEvmErc4337, ERC4337_CONFIG)
