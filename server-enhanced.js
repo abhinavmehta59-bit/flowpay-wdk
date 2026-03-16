@@ -205,6 +205,7 @@ app.get('/api/status', (_, res) => {
   res.json({
     ok: true,
     walletLoaded: !!state.seed,
+    smartWallet: state.addresses?.smartWallet || null,
     network: ACTIVE_NETWORK,
     token: ACTIVE_NETWORK === 'arbitrum' ? 'USDT₮ (real)' : 'test token (Sepolia)',
     pimlico: !!PIMLICO_KEY,

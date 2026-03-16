@@ -456,18 +456,17 @@
       }
     }
 
-    // Auto-load if wallet exists
+    // Auto-load if wallet exists on server
     fetch('/api/status').then(r => r.json()).then(d => {
-      if (d.walletLoaded) {
-        // Wallet auto-loaded on server, fetch details
-        fetch('/api/mcp/tools').then(r => r.json()).then(() => {
-          // Server has wallet, show dashboard
-          document.getElementById('setup-screen').classList.add('hidden');
-          document.getElementById('dashboard-screen').classList.remove('hidden');
-          refreshBalances();
-        });
+      if (d.walletLoaded && d.smartWallet) {
+        // Server has wallet auto-loaded, use it
+        wallet = { addresses: { smartWallet: d.smartWallet } };
+        document.getElementById('wallet-address').textContent = d.smartWallet.slice(0, 6) + '...' + d.smartWallet.slice(-4);
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('dashboard-screen').classList.remove('hidden');
+        refreshBalances();
       }
-    });
+    }).catch(e => console.error('Auto-load failed:', e));
   </script>
 </body>
 </html>
