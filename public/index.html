@@ -3,386 +3,471 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FlowPay — Agent Wallet</title>
+  <title>FlowPay — AI Agent Wallet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e2e8f0;min-height:100vh}
-
-    header{display:flex;align-items:center;gap:12px;padding:20px 32px;border-bottom:1px solid #1e1e2e}
-    .logo{font-size:22px;font-weight:700;color:#7c3aed;letter-spacing:-.5px}
-    .logo span{color:#e2e8f0}
-    .badge{font-size:11px;background:#1e1e2e;color:#7c3aed;padding:3px 8px;border-radius:99px;border:1px solid #7c3aed40}
-    .net{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b}
-    .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
-    main{max-width:960px;margin:0 auto;padding:32px 24px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-    @media(max-width:700px){.grid{grid-template-columns:1fr}}
-
-    h2{font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
-
-    .card{background:#111118;border:1px solid #1e1e2e;border-radius:16px;padding:24px;margin-bottom:20px}
-    .card-sm{background:#111118;border:1px solid #1e1e2e;border-radius:16px;padding:24px}
-
-    .btn{padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:600;transition:all .15s}
-    .btn-primary{background:#7c3aed;color:#fff}
-    .btn-primary:hover{background:#6d28d9}
-    .btn-secondary{background:#1e1e2e;color:#e2e8f0;border:1px solid #2e2e3e}
-    .btn-secondary:hover{background:#2a2a3a}
-    .btn-sm{padding:8px 14px;font-size:13px}
-    .btn:disabled{opacity:.4;cursor:not-allowed}
-    .btns{display:flex;gap:10px;flex-wrap:wrap}
-
-    input,textarea{width:100%;background:#0a0a0f;border:1px solid #2e2e3e;border-radius:10px;padding:11px 14px;color:#e2e8f0;font-size:13px;font-family:inherit;margin-bottom:12px}
-    input:focus,textarea:focus{outline:none;border-color:#7c3aed}
-    label{font-size:12px;color:#64748b;margin-bottom:6px;display:block}
-
-    .addr-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #1e1e2e}
-    .addr-row:last-child{border-bottom:none;padding-bottom:0}
-    .addr-row:first-child{padding-top:0}
-    .chain{display:flex;align-items:center;gap:10px}
-    .chain-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px}
-    .chain-name{font-size:13px;font-weight:600}
-    .chain-sub{font-size:11px;color:#64748b;margin-top:1px}
-    .mono{font-family:'SF Mono',monospace;font-size:11px;color:#94a3b8;background:#0a0a0f;padding:5px 9px;border-radius:6px;cursor:pointer;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:all .15s}
-    .mono:hover{color:#7c3aed}
-
-    .tag{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:600;margin-left:6px}
-    .tag-erc{background:#7c3aed20;color:#a78bfa;border:1px solid #7c3aed40}
-    .tag-x402{background:#05966920;color:#34d399;border:1px solid #05966940}
-
-    .bal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-    .bal{background:#0a0a0f;border:1px solid #1e1e2e;border-radius:12px;padding:16px}
-    .bal-amt{font-size:26px;font-weight:700;margin:4px 0}
-    .bal-sym{font-size:12px;color:#64748b}
-    .bal-lbl{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
-    .bal.usdt{border-color:#2563eb30}.bal.usdt .bal-amt{color:#60a5fa}
-    .bal.eth{border-color:#7c3aed30}.bal.eth .bal-amt{color:#a78bfa}
-    .bal.yield{border-color:#05966930}.bal.yield .bal-amt{color:#34d399}
-
-    .hint{background:#1a1a2e;border:1px solid #7c3aed25;border-radius:10px;padding:12px 16px;font-size:12px;color:#94a3b8;margin-top:14px}
-    .hint a{color:#7c3aed;text-decoration:none}
-
-    .seed-box{background:#0a0a0f;border:1px solid #2e2e3e;border-radius:10px;padding:14px;font-family:'SF Mono',monospace;font-size:12px;color:#7c3aed;word-break:break-all;margin-top:12px}
-    .warn{font-size:11px;color:#f59e0b;margin-top:8px}
-
-    .tx-result{background:#0d1f0d;border:1px solid #22c55e30;border-radius:10px;padding:14px;margin-top:14px;display:none}
-    .tx-result.show{display:block}
-    .tx-result a{color:#22c55e;font-size:12px;font-family:monospace;word-break:break-all}
-    .tx-error{background:#1f0d0d;border:1px solid #ef444430;border-radius:10px;padding:14px;margin-top:14px;display:none;font-size:13px;color:#f87171}
-    .tx-error.show{display:block}
-
-    .spinner{display:inline-block;width:13px;height:13px;border:2px solid #ffffff30;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e1e2e;color:#e2e8f0;padding:10px 20px;border-radius:10px;font-size:13px;border:1px solid #2e2e3e;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
-    .toast.show{opacity:1}
-
-    .hidden{display:none}
-    .refresh{font-size:11px;color:#64748b;background:none;border:none;cursor:pointer;margin-left:8px}
-    .refresh:hover{color:#7c3aed}
-    .divider{height:1px;background:#1e1e2e;margin:16px 0}
-
-    .rule-list{list-style:none;margin-top:8px}
-    .rule-list li{font-size:12px;color:#94a3b8;padding:4px 0;display:flex;align-items:center;gap:8px}
-    .rule-list li::before{content:'✓';color:#22c55e;font-weight:700}
-
-    .step{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
-    .step-num{width:24px;height:24px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
-    .step-text{font-size:13px;color:#94a3b8}
-    .step-text strong{color:#e2e8f0}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #111118;
+      --bg-tertiary: #1a1a24;
+      --border: #2a2a3a;
+      --text-primary: #ffffff;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-purple: #7c3aed;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --gradient-purple: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+      --gradient-card: linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(59,130,246,0.1) 100%);
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      position: fixed;
+      height: 100vh;
+    }
+    .main { flex: 1; margin-left: 260px; padding: 32px 40px; max-width: 1400px; }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: var(--gradient-purple);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .logo-text { font-size: 20px; font-weight: 700; }
+    .logo-text span { color: var(--accent-purple); }
+    .nav-section { margin-bottom: 24px; }
+    .nav-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      padding: 0 12px;
+      margin-bottom: 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .nav-item:hover, .nav-item.active { background: var(--bg-tertiary); color: var(--text-primary); }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .header-title { font-size: 28px; font-weight: 700; }
+    .header-subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .card-gradient {
+      background: var(--gradient-card);
+      border: 1px solid rgba(124,58,237,0.2);
+    }
+    .balance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+    .balance-card { position: relative; overflow: hidden; }
+    .balance-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: var(--gradient-purple);
+    }
+    .balance-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .balance-amount { font-size: 36px; font-weight: 700; margin-bottom: 4px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--gradient-purple); color: white; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); }
+    .btn-lg { padding: 14px 28px; font-size: 15px; }
+    .input {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text-primary);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .input:focus { outline: none; border-color: var(--accent-purple); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .feature-card {
+      padding: 20px;
+      border-radius: 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .feature-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    .tag {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .tag-purple { background: rgba(124,58,237,0.15); color: #a78bfa; }
+    .tag-green { background: rgba(16,185,129,0.15); color: #34d399; }
+    .tag-blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .setup-container { max-width: 480px; margin: 80px auto; text-align: center; }
+    .setup-icon {
+      width: 80px; height: 80px;
+      background: var(--gradient-purple);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 24px;
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 24px; }
+      .balance-grid, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">Flow<span>Pay</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Wallet</div>
+        <div class="nav-item active" onclick="showSection('dashboard')">📊 Dashboard</div>
+        <div class="nav-item" onclick="showSection('send')">📤 Send</div>
+        <div class="nav-item" onclick="showSection('mcp')">🔮 MCP Toolkit</div>
+        <div class="nav-item" onclick="showSection('x402')">⚡ x402</div>
+      </div>
+    </aside>
 
-<header>
-  <div class="logo">Flow<span>Pay</span></div>
-  <div class="badge">WDK Demo · Arbitrum</div>
-  <div class="net"><div class="dot"></div>Testnet</div>
-</header>
+    <main class="main">
+      <!-- Setup -->
+      <div id="setup-screen" class="setup-container">
+        <div class="setup-icon">🪄</div>
+        <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">Create Your Agent Wallet</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 32px;">Self-custodial smart wallet powered by WDK and ERC-4337</p>
+        <button class="btn btn-primary btn-lg" onclick="createWallet()" style="width: 100%;">Create New Wallet</button>
+        <button class="btn btn-secondary" onclick="toggleImport()" style="width: 100%; margin-top: 12px;">Import Existing</button>
+        <div id="import-section" class="hidden">
+          <input type="text" class="input" id="seed-input" placeholder="Enter 12-word seed phrase...">
+          <button class="btn btn-primary" onclick="importWallet()" style="width: 100%;">Import Wallet</button>
+        </div>
+      </div>
 
-<main>
+      <!-- Dashboard -->
+      <div id="dashboard-screen" class="hidden">
+        <div class="header">
+          <div>
+            <h1 class="header-title">Dashboard</h1>
+            <p class="header-subtitle">Manage your AI agent wallet across 13 chains</p>
+          </div>
+          <button class="btn btn-primary" onclick="showSection('send')">+ Send</button>
+        </div>
 
-  <!-- ── SETUP ─────────────────────────────────────────────── -->
-  <div class="card" id="setup-card">
-    <h2>Agent Wallet Setup</h2>
-    <div class="btns" style="margin-bottom:16px">
-      <button class="btn btn-primary" onclick="createWallet(this)">🪄 Create New Agent Wallet</button>
-      <button class="btn btn-secondary" onclick="toggleLoad()">📥 Load Existing</button>
-    </div>
-    <div id="load-section" class="hidden">
-      <label>12-word seed phrase</label>
-      <textarea id="seed-input" rows="2" placeholder="word1 word2 word3 ... word12"></textarea>
-      <button class="btn btn-primary btn-sm" onclick="loadWallet(this)">Load Wallet</button>
-    </div>
+        <div class="balance-grid">
+          <div class="card balance-card card-gradient">
+            <div class="balance-label">USDT₮ Balance</div>
+            <div class="balance-amount" id="usdt-balance">0.00</div>
+            <div style="color: var(--accent-green); font-size: 13px;">● Arbitrum One</div>
+          </div>
+          <div class="card balance-card">
+            <div class="balance-label">ETH Balance</div>
+            <div class="balance-amount" id="eth-balance" style="color: var(--accent-purple);">0.0000</div>
+            <div style="color: var(--text-muted); font-size: 13px;">For gas on Arbitrum</div>
+          </div>
+          <div class="card balance-card">
+            <div class="balance-label">Smart Wallet</div>
+            <div class="balance-amount" style="font-size: 18px; color: var(--text-secondary);" id="wallet-address">Not loaded</div>
+            <div style="color: var(--accent-blue); font-size: 13px;">ERC-4337 • Gasless</div>
+          </div>
+        </div>
+
+        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">AI-Powered Features</h2>
+        <div class="grid-3">
+          <div class="feature-card" onclick="showSection('mcp')">
+            <div class="feature-icon" style="background: rgba(124,58,237,0.15);">🔮</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">MCP Toolkit</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">35 tools across 13 chains</div>
+            <span class="tag tag-purple" style="margin-top: 12px;">13 Chains</span>
+          </div>
+          <div class="feature-card" onclick="showSection('x402')">
+            <div class="feature-icon" style="background: rgba(16,185,129,0.15);">⚡</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">x402 Payments</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">AI-native micropayments</div>
+            <span class="tag tag-green" style="margin-top: 12px;">HTTP 402</span>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background: rgba(59,130,246,0.15);">📈</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">Aave Yield</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">Earn on idle funds</div>
+            <span class="tag tag-blue" style="margin-top: 12px;">4-8% APY</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Send -->
+      <div id="send-screen" class="hidden">
+        <div class="header">
+          <div>
+            <h1 class="header-title">Send USDT₮</h1>
+            <p class="header-subtitle">Gasless transfers via ERC-4337</p>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <input type="text" class="input" id="send-to" placeholder="Recipient address (0x...)">
+            <input type="number" class="input" id="send-amount" placeholder="Amount (USDT₮)" min="0.01" max="1000">
+            <input type="text" class="input" id="send-intent" placeholder="Or: Send 5 USDT to 0x... for invoice #123">
+            <button class="btn btn-primary btn-lg" onclick="sendPayment()" style="width: 100%;">⚡ Send Gaslessly</button>
+            <div id="send-result" style="margin-top: 16px;"></div>
+          </div>
+          <div class="card" style="background: var(--bg-tertiary);">
+            <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--text-muted);">How It Works</h3>
+            <div style="display: flex; flex-direction: column; gap: 16px; color: var(--text-secondary); font-size: 14px;">
+              <div>1. <strong>Intent Parsed</strong> — AI understands your request</div>
+              <div>2. <strong>Rules Checked</strong> — Amount, recipient verified</div>
+              <div>3. <strong>WDK Signs</strong> — ERC-4337 UserOperation</div>
+              <div>4. <strong>Settled</strong> — No ETH needed for gas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MCP -->
+      <div id="mcp-screen" class="hidden">
+        <div class="header">
+          <div>
+            <h1 class="header-title">MCP Toolkit</h1>
+            <p class="header-subtitle">35 AI-native tools across 13 blockchains</p>
+          </div>
+        </div>
+        <div class="card card-gradient" style="margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-around; text-align: center;">
+            <div><div style="font-size: 13px; color: var(--text-muted);">Status</div><div style="font-size: 24px; font-weight: 700;">✅ Active</div></div>
+            <div><div style="font-size: 13px; color: var(--text-muted);">Tools</div><div style="font-size: 24px; font-weight: 700; color: var(--accent-purple);">35</div></div>
+            <div><div style="font-size: 13px; color: var(--text-muted);">Chains</div><div style="font-size: 24px; font-weight: 700; color: var(--accent-blue);">13</div></div>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="feature-card"><div class="feature-icon" style="background: rgba(124,58,237,0.15);">💼</div><div style="font-weight: 600;">Wallet Tools</div><div style="font-size: 13px; color: var(--text-secondary);">Balances, sends, addresses</div></div>
+          <div class="feature-card"><div class="feature-icon" style="background: rgba(59,130,246,0.15);">💱</div><div style="font-weight: 600;">Swap Tools</div><div style="font-size: 13px; color: var(--text-secondary);">Token swaps via Velora</div></div>
+          <div class="feature-card"><div class="feature-icon" style="background: rgba(16,185,129,0.15);">🌉</div><div style="font-weight: 600;">Bridge Tools</div><div style="font-size: 13px; color: var(--text-secondary);">Cross-chain via USDT0</div></div>
+          <div class="feature-card"><div class="feature-icon" style="background: rgba(245,158,11,0.15);">📊</div><div style="font-weight: 600;">Pricing Tools</div><div style="font-size: 13px; color: var(--text-secondary);">Real-time price feeds</div></div>
+          <div class="feature-card"><div class="feature-icon" style="background: rgba(239,68,68,0.15);">📚</div><div style="font-weight: 600;">Indexer Tools</div><div style="font-size: 13px; color: var(--text-secondary);">Transaction history</div></div>
+          <div class="feature-card"><div class="feature-icon" style="background: rgba(139,92,246,0.15);">🏦</div><div style="font-weight: 600;">Lending Tools</div><div style="font-size: 13px; color: var(--text-secondary);">Aave deposits & yields</div></div>
+        </div>
+      </div>
+
+      <!-- x402 -->
+      <div id="x402-screen" class="hidden">
+        <div class="header">
+          <div>
+            <h1 class="header-title">x402 Micropayments</h1>
+            <p class="header-subtitle">AI-native payments via HTTP 402</p>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card card-gradient">
+            <div style="font-size: 48px; margin-bottom: 16px;">⚡</div>
+            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">HTTP 402 Payment Required</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">Programmatic payments for AI agents. No accounts, no API keys, just plain HTTP.</p>
+            <button class="btn btn-primary" onclick="testPremiumIntent()">Test $0.01 Payment</button>
+            <div id="premium-result" style="margin-top: 16px;"></div>
+          </div>
+          <div class="card">
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">How It Works</h3>
+            <div style="display: flex; flex-direction: column; gap: 12px; color: var(--text-secondary);">
+              <div>1. Request resource → 402 response with price</div>
+              <div>2. Sign EIP-3009 authorization</div>
+              <div>3. Facilitator verifies signature</div>
+              <div>4. Receive resource + settlement</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
 
-  <!-- ── DASHBOARD ──────────────────────────────────────────── -->
-  <div id="dashboard" class="hidden">
+  <script>
+    let wallet = null;
+    let currentSection = 'setup';
 
-    <!-- Addresses -->
-    <div class="card">
-      <h2>Agent Addresses</h2>
-      <div class="addr-row">
-        <div class="chain">
-          <div class="chain-icon" style="background:#1e1e2e">⬡</div>
-          <div><div class="chain-name">Ethereum</div><div class="chain-sub">EOA · mainnet-ready</div></div>
-        </div>
-        <div class="mono" id="a-eth" onclick="copy('a-eth')">—</div>
-      </div>
-      <div class="addr-row">
-        <div class="chain">
-          <div class="chain-icon" style="background:#1a1a2e">🔵</div>
-          <div>
-            <div class="chain-name">Arbitrum One <span class="tag tag-x402">X402</span></div>
-            <div class="chain-sub">Low fees · Aave yield</div>
-          </div>
-        </div>
-        <div class="mono" id="a-arb" onclick="copy('a-arb')">—</div>
-      </div>
-      <div class="addr-row">
-        <div class="chain">
-          <div class="chain-icon" style="background:#1e1a2e">🔮</div>
-          <div>
-            <div class="chain-name">Smart Wallet <span class="tag tag-erc">ERC-4337</span></div>
-            <div class="chain-sub">Gasless · Arbitrum · USDT₮</div>
-          </div>
-        </div>
-        <div class="mono" id="a-smart" onclick="copy('a-smart')">—</div>
-      </div>
-    </div>
-
-    <div class="grid">
-
-      <!-- Balances -->
-      <div class="card-sm">
-        <h2>Balances <button class="refresh" onclick="refreshBalance()">↻ refresh</button></h2>
-        <div class="bal-grid">
-          <div class="bal usdt">
-            <div class="bal-lbl">USDT₮</div>
-            <div class="bal-amt" id="b-usdt">—</div>
-            <div class="bal-sym">Arbitrum · USDT₮</div>
-          </div>
-          <div class="bal eth">
-            <div class="bal-lbl">ETH</div>
-            <div class="bal-amt" id="b-eth">—</div>
-            <div class="bal-sym">Arbitrum · USDT₮</div>
-          </div>
-        </div>
-        <div class="hint" id="faucet-hint">
-          💧 Need test USDT₮? →
-          <a href="https://dashboard.pimlico.io/test-erc20-faucet" target="_blank">pimlico.io faucet (Sepolia dev only)</a>
-          <br/>Paste your smart wallet address · select Sepolia
-        </div>
-      </div>
-
-      <!-- Rule Engine -->
-      <div class="card-sm">
-        <h2>Rule Engine</h2>
-        <ul class="rule-list">
-          <li>Max 1,000 USDT₮ per transaction</li>
-          <li>Recipient must be valid address</li>
-          <li>Balance must cover amount</li>
-          <li>LLM parses intent only — never executes</li>
-          <li>All payments signed by WDK wallet</li>
-        </ul>
-        <div class="divider"></div>
-        <div style="font-size:12px;color:#64748b">
-          Rule engine enforces constraints. The AI agent (Jarvis via OpenClaw) receives the instruction and passes it through rules before WDK signs.
-        </div>
-      </div>
-    </div>
-
-    <!-- Send -->
-    <div class="card">
-      <h2>Send USDT₮ <span style="font-size:11px;color:#64748b;font-weight:400;text-transform:none;letter-spacing:0">· gasless via ERC-4337 · Sepolia</span></h2>
-      <div class="grid">
-        <div>
-          <label>Recipient address</label>
-          <input id="send-to" type="text" placeholder="0x..." />
-          <label>Amount (USDT₮)</label>
-          <input id="send-amount" type="number" placeholder="10" min="0.01" max="1000" />
-          <button class="btn btn-primary" onclick="sendUSDT₮(this)">⚡ Send Gaslessly</button>
-        </div>
-        <div>
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-text"><strong>Intent parsed</strong> — Jarvis reads instruction</div>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-text"><strong>Rules checked</strong> — amount, recipient, balance</div>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-text"><strong>WDK signs</strong> — ERC-4337 UserOperation submitted</div>
-          </div>
-          <div class="step">
-            <div class="step-num">4</div>
-            <div class="step-text"><strong>Settled on-chain</strong> — no ETH needed for gas</div>
-          </div>
-        </div>
-      </div>
-      <div class="tx-result" id="tx-result">
-        ✅ Transaction sent! <br/>
-        <a id="tx-link" href="#" target="_blank">View on Etherscan →</a>
-      </div>
-      <div class="tx-error" id="tx-error"></div>
-    </div>
-
-    <!-- Aave Yield -->
-    <div class="card">
-      <h2>Yield on Idle Funds <span style="font-size:11px;color:#64748b;font-weight:400;text-transform:none;letter-spacing:0">· Aave V3 · Arbitrum</span></h2>
-      <div class="grid">
-        <div class="bal yield">
-          <div class="bal-lbl">Aave USDT₮ Position</div>
-          <div class="bal-amt" id="b-aave">—</div>
-          <div class="bal-sym">~4-8% APY on Arbitrum</div>
-        </div>
-        <div style="font-size:13px;color:#94a3b8;line-height:1.6">
-          Idle USDT₮ between payments automatically earns yield via Aave V3. 
-          FlowPay deposits when funds are waiting, withdraws when a payment is triggered.
-          <br/><br/>
-          <button class="btn btn-secondary btn-sm" onclick="checkAave()">Check Aave Position</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Seed -->
-    <div class="card">
-      <h2>🔑 Agent Seed Phrase</h2>
-      <div class="seed-box" id="seed-display">—</div>
-      <div class="warn">⚠️ Testnet only. Never use this pattern with real funds without proper encrypted key management.</div>
-    </div>
-
-  </div><!-- /dashboard -->
-
-</main>
-
-<div class="toast" id="toast"></div>
-
-<script>
-let wallet = null
-
-function toast(msg) {
-  const t = document.getElementById('toast')
-  t.textContent = msg
-  t.classList.add('show')
-  setTimeout(() => t.classList.remove('show'), 2000)
-}
-
-function copy(id) {
-  navigator.clipboard.writeText(document.getElementById(id).textContent)
-  toast('Copied!')
-}
-
-function toggleLoad() {
-  document.getElementById('load-section').classList.toggle('hidden')
-}
-
-function setBtn(btn, loading, label) {
-  btn.disabled = loading
-  btn.innerHTML = loading ? `<span class="spinner"></span>${label}` : btn._orig
-}
-
-async function createWallet(btn) {
-  btn._orig = btn.innerHTML
-  setBtn(btn, true, 'Creating...')
-  try {
-    const r = await fetch('/api/wallet/create', { method: 'POST' })
-    const d = await r.json()
-    if (d.error) throw new Error(d.error)
-    renderWallet(d)
-  } catch(e) { toast('Error: ' + e.message) }
-  finally { setBtn(btn, false) }
-}
-
-async function loadWallet(btn) {
-  btn._orig = btn.innerHTML
-  setBtn(btn, true, 'Loading...')
-  try {
-    const seed = document.getElementById('seed-input').value.trim()
-    const r = await fetch('/api/wallet/load', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ seed })
-    })
-    const d = await r.json()
-    if (d.error) throw new Error(d.error)
-    renderWallet(d)
-  } catch(e) { toast('Error: ' + e.message) }
-  finally { setBtn(btn, false) }
-}
-
-function renderWallet(data) {
-  wallet = data
-  document.getElementById('a-eth').textContent   = data.addresses.ethereum
-  document.getElementById('a-arb').textContent   = data.addresses.arbitrum
-  document.getElementById('a-smart').textContent = data.addresses.smartWallet
-  document.getElementById('seed-display').textContent = data.seed
-  document.getElementById('setup-card').classList.add('hidden')
-  document.getElementById('dashboard').classList.remove('hidden')
-  refreshBalance()
-}
-
-async function refreshBalance() {
-  if (!wallet) return
-  document.getElementById('b-usdt').textContent = '...'
-  document.getElementById('b-eth').textContent  = '...'
-  try {
-    const r = await fetch(`/api/balance/${wallet.addresses.smartWallet}`)
-    const d = await r.json()
-    document.getElementById('b-usdt').textContent = parseFloat(d.USDT₮).toFixed(2)
-    document.getElementById('b-eth').textContent  = parseFloat(d.ETH).toFixed(4)
-    if (parseFloat(d.USDT₮) > 0) {
-      document.getElementById('faucet-hint').style.display = 'none'
+    function showSection(section) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      ['setup-screen', 'dashboard-screen', 'send-screen', 'mcp-screen', 'x402-screen'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(section + '-screen').classList.remove('hidden');
+      currentSection = section;
     }
-  } catch(e) {
-    document.getElementById('b-usdt').textContent = 'err'
-    document.getElementById('b-eth').textContent  = 'err'
-  }
-}
 
-async function sendUSDT₮(btn) {
-  btn._orig = btn.innerHTML
-  setBtn(btn, true, 'Sending...')
-  document.getElementById('tx-result').classList.remove('show')
-  document.getElementById('tx-error').classList.remove('show')
-  try {
-    const to     = document.getElementById('send-to').value.trim()
-    const amount = document.getElementById('send-amount').value.trim()
-    const r = await fetch('/api/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to, amount })
-    })
-    const d = await r.json()
-    if (d.error) throw new Error(d.error)
-    const el = document.getElementById('tx-result')
-    document.getElementById('tx-link').href        = d.explorerUrl
-    document.getElementById('tx-link').textContent = `${d.txHash.slice(0,20)}... → Etherscan`
-    el.classList.add('show')
-    refreshBalance()
-  } catch(e) {
-    const el = document.getElementById('tx-error')
-    el.textContent = '❌ ' + e.message
-    el.classList.add('show')
-  }
-  finally { setBtn(btn, false) }
-}
+    function toggleImport() {
+      document.getElementById('import-section').classList.toggle('hidden');
+    }
 
-async function checkAave() {
-  if (!wallet) return
-  document.getElementById('b-aave').textContent = '...'
-  try {
-    const r = await fetch(`/api/aave/position/${wallet.addresses.arbitrum}`)
-    const d = await r.json()
-    document.getElementById('b-aave').textContent = parseFloat(d.usdtBalance).toFixed(2) + ' USDT₮'
-  } catch(e) {
-    document.getElementById('b-aave').textContent = 'Error'
-  }
-}
-</script>
+    async function createWallet() {
+      try {
+        const r = await fetch('/api/wallet/create', { method: 'POST' });
+        const d = await r.json();
+        if (d.error) throw new Error(d.error);
+        loadWallet(d);
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    async function importWallet() {
+      const seed = document.getElementById('seed-input').value.trim();
+      try {
+        const r = await fetch('/api/wallet/load', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seed })
+        });
+        const d = await r.json();
+        if (d.error) throw new Error(d.error);
+        loadWallet(d);
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    function loadWallet(data) {
+      wallet = data;
+      document.getElementById('wallet-address').textContent = data.addresses.smartWallet.slice(0, 6) + '...' + data.addresses.smartWallet.slice(-4);
+      showSection('dashboard');
+      refreshBalances();
+    }
+
+    async function refreshBalances() {
+      if (!wallet) return;
+      try {
+        const r = await fetch(`/api/balance/${wallet.addresses.smartWallet}`);
+        const d = await r.json();
+        document.getElementById('usdt-balance').textContent = parseFloat(d.USDT).toFixed(2);
+        document.getElementById('eth-balance').textContent = parseFloat(d.ETH).toFixed(4);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function sendPayment() {
+      const to = document.getElementById('send-to').value;
+      const amount = document.getElementById('send-amount').value;
+      const resultEl = document.getElementById('send-result');
+      
+      try {
+        const r = await fetch('/api/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to, amount })
+        });
+        const d = await r.json();
+        if (d.error) throw new Error(d.error);
+        resultEl.innerHTML = `✅ Sent! <a href="${d.explorerUrl}" target="_blank" style="color: var(--accent-green);">View tx</a>`;
+        refreshBalances();
+      } catch (e) {
+        resultEl.innerHTML = `❌ ${e.message}`;
+      }
+    }
+
+    async function testPremiumIntent() {
+      const resultEl = document.getElementById('premium-result');
+      resultEl.textContent = 'Processing...';
+      try {
+        const r = await fetch('/api/premium-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Send 5 USDT to 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb7 for testing' })
+        });
+        const d = await r.json();
+        if (d.error) throw new Error(d.error);
+        resultEl.innerHTML = `✅ ${d.message}`;
+      } catch (e) {
+        resultEl.innerHTML = `❌ ${e.message}`;
+      }
+    }
+
+    // Auto-load if wallet exists
+    fetch('/api/status').then(r => r.json()).then(d => {
+      if (d.walletLoaded) {
+        // Wallet auto-loaded on server, fetch details
+        fetch('/api/mcp/tools').then(r => r.json()).then(() => {
+          // Server has wallet, show dashboard
+          document.getElementById('setup-screen').classList.add('hidden');
+          document.getElementById('dashboard-screen').classList.remove('hidden');
+          refreshBalances();
+        });
+      }
+    });
+  </script>
 </body>
 </html>
